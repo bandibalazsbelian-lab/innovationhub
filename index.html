@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InnovationHub TaskManager</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#8B5CF6;--primary-light:#A78BFA;--cyan:#06B6D4;--black:#0a0a0f;--dark-blue:#1e1b4b;--surface:#1a1625;--text:#e2e8f0;--text-muted:#94a3b8;--critical:#ef4444;--important:#f97316;--medium:#eab308;--low:#3b82f6;--idle:#6b7280;--success:#22c55e;--glass:rgba(139,92,246,0.1);--glass-border:rgba(139,92,246,0.3)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Rajdhani',sans-serif;background:var(--black);color:var(--text);min-height:100vh;overflow-x:hidden}
+.bg{position:fixed;inset:0;z-index:-1;background:linear-gradient(135deg,var(--black),var(--dark-blue),var(--black))}
+.bg::before{content:'';position:absolute;inset:-50%;width:200%;height:200%;background:radial-gradient(circle at 30% 30%,rgba(139,92,246,0.1),transparent 50%),radial-gradient(circle at 70% 70%,rgba(6,182,212,0.08),transparent 50%);animation:bgPulse 15s ease-in-out infinite}
+@keyframes bgPulse{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-5%,-5%) scale(1.1)}}
+.particles{position:fixed;inset:0;pointer-events:none;z-index:0}
+.particle{position:absolute;width:2px;height:2px;background:var(--primary-light);border-radius:50%;opacity:0.5;animation:float 20s infinite}
+@keyframes float{0%,100%{transform:translateY(100vh);opacity:0}10%,90%{opacity:0.5}100%{transform:translateY(-100vh);opacity:0}}
+.app{display:flex;flex-direction:column;min-height:100vh;position:relative;z-index:1}
+header{background:linear-gradient(180deg,rgba(30,27,75,0.95),rgba(19,17,28,0.9));backdrop-filter:blur(20px);border-bottom:1px solid var(--glass-border);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:1rem}
+.logo-icon{width:50px;height:50px;background:linear-gradient(135deg,var(--primary),var(--cyan));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;box-shadow:0 0 20px rgba(139,92,246,0.5);animation:pulse 3s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 20px rgba(139,92,246,0.5)}50%{box-shadow:0 0 40px rgba(139,92,246,0.8)}}
+.logo-text{font-family:'Orbitron',sans-serif;font-size:1.4rem;font-weight:700;background:linear-gradient(90deg,var(--primary-light),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:2px}
+.logo-sub{font-size:0.7rem;color:var(--text-muted);letter-spacing:3px;text-transform:uppercase}
+.progress{display:flex;align-items:center;gap:1rem;background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;padding:0.5rem 1rem}
+.progress-bar{width:180px;height:8px;background:var(--surface);border-radius:4px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--cyan));border-radius:4px;transition:width 0.5s}
+.progress-text{font-family:'Orbitron',sans-serif;font-size:0.9rem;font-weight:600;color:var(--cyan)}
+.user-btn{display:flex;align-items:center;gap:0.75rem;background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;padding:0.5rem 1rem;cursor:pointer;position:relative;transition:all 0.3s}
+.user-btn:hover{background:rgba(139,92,246,0.2);border-color:var(--primary)}
+.avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--cyan));display:flex;align-items:center;justify-content:center;font-weight:600}
+.avatar.admin{border:2px solid gold;box-shadow:0 0 10px rgba(255,215,0,0.5)}
+.dropdown{position:absolute;top:calc(100% + 0.5rem);right:0;background:var(--surface);border:1px solid var(--glass-border);border-radius:12px;padding:0.5rem;min-width:200px;display:none;z-index:200;box-shadow:0 10px 40px rgba(0,0,0,0.5)}
+.dropdown.show{display:block}
+.dropdown-item{display:flex;align-items:center;gap:0.75rem;padding:0.75rem;border-radius:8px;cursor:pointer}
+.dropdown-item:hover{background:var(--glass)}
+nav{background:rgba(19,17,28,0.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--glass-border);padding:0 1rem;overflow-x:auto}
+.tabs{display:flex;gap:0.25rem;min-width:max-content}
+.tab{padding:1rem 1.25rem;font-size:0.9rem;font-weight:600;color:var(--text-muted);background:transparent;border:none;cursor:pointer;position:relative;transition:all 0.3s;white-space:nowrap}
+.tab:hover{color:var(--text);background:var(--glass)}
+.tab.active{color:var(--cyan)}
+.tab.active::after{content:'';position:absolute;bottom:0;left:0;width:100%;height:2px;background:linear-gradient(90deg,var(--primary),var(--cyan))}
+.sub-nav{display:none;gap:0.5rem;padding:0.75rem 2rem;background:var(--surface);border-bottom:1px solid var(--glass-border);overflow-x:auto}
+.sub-nav.show{display:flex}
+.sub-tab{padding:0.5rem 1rem;font-size:0.85rem;color:var(--text-muted);background:var(--glass);border:1px solid transparent;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:0.5rem}
+.sub-tab.active{background:linear-gradient(135deg,var(--primary),var(--cyan));color:white}
+main{flex:1;padding:2rem;max-width:1600px;margin:0 auto;width:100%}
+.title{font-family:'Orbitron',sans-serif;font-size:1.8rem;font-weight:700;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem}
+.title-icon{width:50px;height:50px;background:linear-gradient(135deg,var(--primary),var(--cyan));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem}
+.card{background:linear-gradient(135deg,rgba(26,22,37,0.9),rgba(19,17,28,0.95));border:1px solid var(--glass-border);border-radius:16px;padding:1.5rem;margin-bottom:1.5rem}
+.card:hover{border-color:var(--primary);box-shadow:0 0 20px rgba(139,92,246,0.3)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1.5rem}
+.section{background:linear-gradient(135deg,rgba(26,22,37,0.9),rgba(19,17,28,0.95));border:1px solid var(--glass-border);border-radius:16px;padding:1.5rem}
+.section-title{font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:600;margin-bottom:1rem;display:flex;align-items:center;gap:0.75rem;color:var(--cyan)}
+.section-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--primary),var(--cyan));border-radius:8px;display:flex;align-items:center;justify-content:center}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin-bottom:2rem}
+.stat{background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;padding:1.25rem;text-align:center;transition:all 0.3s}
+.stat:hover{transform:translateY(-4px);border-color:var(--primary)}
+.stat-val{font-family:'Orbitron',sans-serif;font-size:2rem;font-weight:700;background:linear-gradient(90deg,var(--primary-light),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat-label{font-size:0.85rem;color:var(--text-muted)}
+.task{background:linear-gradient(135deg,rgba(26,22,37,0.95),rgba(19,17,28,0.98));border:1px solid var(--glass-border);border-radius:16px;padding:1.25rem;margin-bottom:1rem;position:relative;overflow:hidden;transition:all 0.3s}
+.task::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--primary)}
+.task.critical::before{background:var(--critical)}
+.task.important::before{background:var(--important)}
+.task.medium::before{background:var(--medium)}
+.task.low::before{background:var(--low)}
+.task:hover{transform:translateY(-2px);border-color:var(--primary)}
+.task.critical{animation:criticalPulse 2s infinite}
+@keyframes criticalPulse{50%{box-shadow:0 0 20px rgba(239,68,68,0.3)}}
+.task-meta{display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.75rem}
+.badge{padding:0.25rem 0.75rem;border-radius:20px;font-size:0.75rem;font-weight:600}
+.badge.critical{background:rgba(239,68,68,0.2);color:var(--critical);border:1px solid var(--critical)}
+.badge.important{background:rgba(249,115,22,0.2);color:var(--important);border:1px solid var(--important)}
+.badge.medium{background:rgba(234,179,8,0.2);color:var(--medium);border:1px solid var(--medium)}
+.badge.low{background:rgba(59,130,246,0.2);color:var(--low);border:1px solid var(--low)}
+.badge.idle{background:rgba(107,114,128,0.2);color:var(--idle);border:1px solid var(--idle)}
+.badge.comp{background:rgba(6,182,212,0.2);color:var(--cyan)}
+.badge.status{background:rgba(139,92,246,0.2);color:var(--primary-light)}
+.task-title{font-size:1.1rem;font-weight:600;margin-bottom:0.5rem}
+.task-assignee{display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;font-size:0.9rem;color:var(--text-muted)}
+.task-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:600}
+.countdown{font-family:'Orbitron',sans-serif;padding:0.25rem 0.5rem;border-radius:6px;font-size:0.8rem}
+.countdown.safe{background:rgba(34,197,94,0.2);color:var(--success)}
+.countdown.warning{background:rgba(249,115,22,0.2);color:var(--important)}
+.countdown.danger{background:rgba(239,68,68,0.2);color:var(--critical);animation:blink 1s infinite}
+@keyframes blink{50%{opacity:0.5}}
+.stickers{display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap}
+.sticker{padding:0.5rem 1rem;border-radius:8px;font-size:0.85rem;font-weight:600}
+.sticker.solving{background:rgba(34,197,94,0.2);color:var(--success);border:2px solid var(--success)}
+.sticker.help{background:rgba(249,115,22,0.2);color:var(--important);border:2px solid var(--important)}
+.actions{display:flex;gap:0.5rem;flex-wrap:wrap}
+.btn{padding:0.5rem 1rem;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;border:1px solid var(--glass-border);background:var(--glass);color:var(--text);display:flex;align-items:center;gap:0.5rem;transition:all 0.3s}
+.btn:hover{background:var(--primary);border-color:var(--primary);transform:translateY(-2px)}
+.btn.complete{background:rgba(34,197,94,0.2);border-color:var(--success);color:var(--success)}
+.btn.complete:hover{background:var(--success);color:white}
+.btn.delete{background:rgba(239,68,68,0.2);border-color:var(--critical);color:var(--critical)}
+.btn.take{background:linear-gradient(135deg,var(--primary),var(--cyan));border:none;color:white}
+.sticker-btn{padding:0.4rem 0.8rem;border-radius:6px;font-size:0.8rem;cursor:pointer;border:1px dashed var(--glass-border);background:transparent;color:var(--text-muted)}
+.sticker-btn.active{border-style:solid}
+.sticker-btn.solving.active{background:rgba(34,197,94,0.2);border-color:var(--success);color:var(--success)}
+.sticker-btn.help.active{background:rgba(249,115,22,0.2);border-color:var(--important);color:var(--important)}
+textarea{width:100%;min-height:150px;background:var(--surface);border:2px solid var(--glass-border);border-radius:12px;padding:1rem;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:1rem;resize:vertical}
+textarea:focus{outline:none;border-color:var(--primary)}
+.ai-btn{padding:1rem 2rem;background:linear-gradient(135deg,var(--primary),var(--cyan));border:none;border-radius:12px;color:white;font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:600;cursor:pointer;margin-top:1rem;display:inline-flex;align-items:center;gap:0.75rem}
+.ai-btn:hover{transform:translateY(-2px);box-shadow:0 0 20px rgba(139,92,246,0.5)}
+.parsed{background:var(--surface);border:2px dashed var(--glass-border);border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+.field{margin-bottom:0.75rem}
+.field-label{font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem}
+input,select{width:100%;padding:0.5rem;background:rgba(10,10,15,0.8);border:1px solid var(--glass-border);border-radius:6px;color:var(--text);font-family:'Rajdhani',sans-serif}
+.row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
+.approve{width:100%;padding:1rem;background:linear-gradient(135deg,var(--success),#16a34a);border:none;border-radius:12px;color:white;font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:600;cursor:pointer;margin-top:1.5rem}
+.leaderboard{list-style:none}
+.lb-item{display:flex;align-items:center;gap:1rem;padding:1rem;background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;margin-bottom:0.75rem}
+.lb-item.first{background:linear-gradient(135deg,rgba(255,215,0,0.15),rgba(255,193,7,0.1));border-color:gold}
+.lb-item.second{background:linear-gradient(135deg,rgba(192,192,192,0.15),rgba(158,158,158,0.1));border-color:silver}
+.lb-item.third{background:linear-gradient(135deg,rgba(205,127,50,0.15),rgba(176,141,87,0.1));border-color:#cd7f32}
+.lb-rank{font-family:'Orbitron',sans-serif;font-size:1.25rem;font-weight:700;width:40px;text-align:center}
+.lb-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--cyan));display:flex;align-items:center;justify-content:center;font-weight:600}
+.lb-info{flex:1}
+.lb-name{font-weight:600}
+.lb-tasks{font-size:0.8rem;color:var(--text-muted)}
+.lb-points{font-family:'Orbitron',sans-serif;font-size:1.25rem;font-weight:700;color:var(--cyan)}
+.settings-title{font-family:'Orbitron',sans-serif;font-size:1.1rem;font-weight:600;margin:1.5rem 0 1rem;color:var(--cyan)}
+.comp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:0.75rem}
+.comp-item{display:flex;align-items:center;gap:0.75rem;padding:0.75rem;background:var(--glass);border:1px solid var(--glass-border);border-radius:8px;cursor:pointer}
+.comp-item.strength{background:rgba(34,197,94,0.15);border-color:var(--success)}
+.comp-item.weakness{background:rgba(239,68,68,0.15);border-color:var(--critical)}
+.toast-container{position:fixed;top:100px;right:20px;z-index:1000}
+.toast{background:var(--surface);border:1px solid var(--glass-border);border-radius:12px;padding:1rem 1.5rem;margin-bottom:0.5rem;display:flex;align-items:center;gap:1rem;animation:toastIn 0.3s}
+.toast.success{border-color:var(--success)}
+.toast.warning{border-color:var(--important)}
+@keyframes toastIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+.celebration{position:fixed;inset:0;background:rgba(10,10,15,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2000;opacity:0;pointer-events:none}
+.celebration.show{opacity:1;pointer-events:all}
+.celebration-text{font-family:'Orbitron',sans-serif;font-size:3rem;font-weight:900;background:linear-gradient(90deg,gold,var(--primary-light),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:celebText 1s}
+@keyframes celebText{0%{transform:scale(0)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
+.celebration-sub{font-size:1.5rem;color:var(--text);margin-top:1rem}
+.celebration-skip{position:absolute;bottom:50px;padding:0.75rem 2rem;background:var(--glass);border:1px solid var(--glass-border);border-radius:8px;color:var(--text);cursor:pointer}
+canvas{position:fixed;inset:0;pointer-events:none;z-index:1999}
+.modal{position:fixed;inset:0;background:rgba(10,10,15,0.9);display:flex;align-items:center;justify-content:center;z-index:1500;opacity:0;pointer-events:none}
+.modal.show{opacity:1;pointer-events:all}
+.modal-box{background:var(--surface);border:1px solid var(--glass-border);border-radius:20px;padding:2rem;max-width:600px;width:90%;max-height:90vh;overflow-y:auto}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem}
+.modal-title{font-family:'Orbitron',sans-serif;font-size:1.25rem}
+.modal-close{background:none;border:none;color:var(--text-muted);font-size:1.5rem;cursor:pointer}
+.email{background:rgba(10,10,15,0.8);border:1px solid var(--glass-border);border-radius:12px;padding:1.5rem;font-family:monospace;white-space:pre-wrap}
+.copy{padding:0.75rem 1.5rem;background:linear-gradient(135deg,var(--primary),var(--cyan));border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;margin-top:1rem}
+.profile{display:flex;align-items:center;gap:1.5rem;margin-bottom:2rem;padding:1.5rem;background:var(--glass);border:1px solid var(--glass-border);border-radius:16px;flex-wrap:wrap}
+.profile-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:700}
+.profile-avatar.admin{border:3px solid gold}
+.profile-info{flex:1;min-width:200px}
+.profile-name{font-family:'Orbitron',sans-serif;font-size:1.5rem;font-weight:700}
+.profile-role{color:var(--text-muted)}
+.profile-status{display:flex;align-items:center;gap:0.5rem;margin-top:0.5rem}
+.status-dot{width:10px;height:10px;border-radius:50%}
+.status-dot.online{background:var(--success);box-shadow:0 0 10px var(--success)}
+.status-dot.away{background:var(--medium)}
+.status-dot.vacation{background:var(--critical)}
+.status-dot.offline{background:var(--idle)}
+.profile-stats{display:flex;gap:2rem}
+.profile-stat{text-align:center}
+.profile-stat-val{font-family:'Orbitron',sans-serif;font-size:1.5rem;font-weight:700;color:var(--cyan)}
+.profile-stat-label{font-size:0.8rem;color:var(--text-muted)}
+.empty{text-align:center;padding:3rem;color:var(--text-muted)}
+.empty-icon{font-size:4rem;margin-bottom:1rem;opacity:0.5}
+.content{display:none}
+.content.show{display:block}
+.filter-bar{display:flex;gap:0.5rem;margin-bottom:1.5rem}
+.filter{padding:0.5rem 1rem;background:var(--glass);border:1px solid var(--glass-border);border-radius:8px;color:var(--text-muted);cursor:pointer}
+.filter.active{background:var(--primary);color:white}
+@media(max-width:768px){header{padding:0.75rem 1rem}.progress-bar{width:120px}main{padding:1rem}.title{font-size:1.5rem}.grid{grid-template-columns:1fr}.row{grid-template-columns:1fr}.profile{flex-direction:column;text-align:center}}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="particles" id="particles"></div>
+<canvas id="confetti"></canvas>
+<div class="app">
+<header>
+<div class="logo"><div class="logo-icon">⬡</div><div><div class="logo-text">INNOVATIONHUB</div><div class="logo-sub">TaskManager</div></div></div>
+<div class="progress"><span style="font-size:0.8rem;color:var(--text-muted)">📊</span><div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div><span class="progress-text" id="progText">0/500</span></div>
+<div class="user-btn" id="userBtn"><div class="avatar admin" id="userAvatar">S</div><div style="display:flex;flex-direction:column"><div class="user-name" id="userName">Stefanie 👑</div><div style="font-size:0.75rem;color:var(--text-muted)" id="userRole">LEADER</div></div><div class="dropdown" id="dropdown"></div></div>
+</header>
+<nav><div class="tabs">
+<button class="tab active" data-t="dashboard">📊 DASHBOARD</button>
+<button class="tab" data-t="ai">📝 AI ASSZISZTENS</button>
+<button class="tab" data-t="pool">⬡ POOL</button>
+<button class="tab" data-t="help">🤝 SEGÍTSÉG</button>
+<button class="tab" data-t="team">👥 CSAPAT</button>
+<button class="tab" data-t="stats">📈 STATISZTIKA</button>
+<button class="tab" data-t="settings">⚙️ BEÁLLÍTÁSOK</button>
+</div></nav>
+<div class="sub-nav" id="subNav"></div>
+<main>
+<div class="content show" id="c-dashboard"><h1 class="title"><div class="title-icon">📊</div>Dashboard</h1><div class="stats" id="dStats"></div><div class="grid"><div class="section"><h3 class="section-title"><div class="section-icon">🔥</div>Sürgős feladatok</h3><div id="dUrgent"></div></div><div class="section"><h3 class="section-title"><div class="section-icon">🆘</div>Segítségkérések</h3><div id="dHelp"></div></div><div class="section"><h3 class="section-title"><div class="section-icon">⬡</div>Pool</h3><div id="dPool"></div></div><div class="section"><h3 class="section-title"><div class="section-icon">🏆</div>Top 3</h3><div id="dTop"></div></div></div></div>
+<div class="content" id="c-ai"><h1 class="title"><div class="title-icon">📝</div>AI Asszisztens</h1><div class="card"><p style="color:var(--text-muted);margin-bottom:1rem">Írd le a feladatokat természetes nyelven!</p><textarea id="aiIn" placeholder="Példa: Patriknak kéne egy PPT a Q2 eredményekről péntekig, ASAP. Matyi nézze át a szerződést, ráér. Valaki kutatná meg a versenytársakat?"></textarea><button class="ai-btn" id="aiBtn">🤖 FELDOLGOZÁS</button></div><div id="parsed"></div></div>
+<div class="content" id="c-pool"><h1 class="title"><div class="title-icon">⬡</div>Pool - Közös Feladatok</h1><p style="color:var(--text-muted);margin-bottom:1.5rem">Pool feladatért +20% bónusz!</p><div class="filter-bar"><button class="filter active" data-f="all">Mind</button><button class="filter" data-f="critical">🔴 Kritikus</button><button class="filter" data-f="important">🟠 Fontos</button></div><div id="poolTasks"></div></div>
+<div class="content" id="c-help"><h1 class="title"><div class="title-icon">🤝</div>Segítség Központ</h1><div class="grid"><div><h3 class="section-title"><div class="section-icon">🆘</div>Aktív kérések</h3><div id="helpReqs"></div></div><div class="section"><h3 class="section-title"><div class="section-icon">🦸</div>Segítők Ranglistája</h3><ul class="leaderboard" id="helpLb"></ul></div></div></div>
+<div class="content" id="c-team"><h1 class="title"><div class="title-icon">👥</div>Csapat</h1><div id="teamContent"></div></div>
+<div class="content" id="c-stats"><h1 class="title"><div class="title-icon">📈</div>Statisztika</h1><div class="grid"><div class="section"><h3 class="section-title"><div class="section-icon">🏆</div>Ranglista</h3><ul class="leaderboard" id="mainLb"></ul></div><div class="section"><h3 class="section-title"><div class="section-icon">📊</div>Csapat összesítő</h3><div id="teamStats"></div></div></div></div>
+<div class="content" id="c-settings"><h1 class="title"><div class="title-icon">⚙️</div>Beállítások</h1><div class="card"><div class="field"><div class="field-label">Csapattag kiválasztása:</div><select id="setMember" style="max-width:300px"></select></div><h3 class="settings-title">💪 Erősségek</h3><div class="comp-grid" id="strGrid"></div><h3 class="settings-title">⚠️ Fejlesztendő területek</h3><div class="comp-grid" id="weakGrid"></div><div id="adminSet"></div></div></div>
+</main>
+</div>
+<div class="toast-container" id="toasts"></div>
+<div class="celebration" id="celeb"><div class="celebration-text" id="celebText"></div><div class="celebration-sub" id="celebSub"></div><button class="celebration-skip" onclick="hideCeleb()">FOLYTATÁS →</button></div>
+<div class="modal" id="emailModal"><div class="modal-box"><div class="modal-header"><h3 class="modal-title">📧 Email Sablon</h3><button class="modal-close" onclick="closeModal('emailModal')">×</button></div><pre class="email" id="emailContent"></pre><button class="copy" onclick="copyEmail()">📋 Másolás vágólapra</button></div></div>
+<div class="modal" id="editModal"><div class="modal-box"><div class="modal-header"><h3 class="modal-title">✏️ Feladat szerkesztése</h3><button class="modal-close" onclick="closeModal('editModal')">×</button></div><div id="editContent"></div></div></div>
+
+<script>
+const TEAM=[{id:'stefanie',name:'Stefanie',role:'LEADER',admin:true},{id:'krisz',name:'Krisz',role:'Csapattag'},{id:'patrik',name:'Patrik',role:'Csapattag'},{id:'matyi',name:'Matyi',role:'Csapattag'},{id:'bence',name:'Bence',role:'Csapattag'},{id:'judit',name:'Judit',role:'Csapattag'},{id:'norbi',name:'Norbi',role:'Csapattag'},{id:'balazs',name:'Balázs',role:'Csapattag'}];
+const COMP=[{id:'ppt',name:'Prezentáció',icon:'📊'},{id:'word',name:'Dokumentáció',icon:'📝'},{id:'excel',name:'Adatelemzés',icon:'📈'},{id:'research',name:'Kutatás',icon:'🔍'},{id:'design',name:'Design',icon:'🎨'},{id:'communication',name:'Kommunikáció',icon:'💬'},{id:'pm',name:'Projektmenedzsment',icon:'📋'},{id:'tech',name:'Technikai',icon:'💻'},{id:'marketing',name:'Marketing',icon:'📢'},{id:'finance',name:'Pénzügy',icon:'💰'},{id:'legal',name:'Jogi',icon:'⚖️'},{id:'negotiation',name:'Tárgyalás',icon:'🤝'},{id:'organizing',name:'Szervezés',icon:'📅'},{id:'writing',name:'Írás',icon:'✍️'},{id:'language',name:'Nyelvtudás',icon:'🌐'}];
+const PRIO={critical:{name:'KRITIKUS',pts:50},important:{name:'FONTOS',pts:35},medium:{name:'KÖZEPES',pts:20},low:{name:'ALACSONY',pts:10},idle:{name:'RÁÉR',pts:5}};
+const ACH=[{pts:100,badge:'🌟',title:'Csillag',msg:'100 pont elérve!'},{pts:250,badge:'⭐',title:'Arany Csillag',msg:'250 pont!'},{pts:500,badge:'🏆',title:'Trófa',msg:'LEGENDA STÁTUSZ!',big:true},{pts:1000,badge:'👑',title:'Korona',msg:'KIRÁLY STÁTUSZ!',big:true}];
+
+let S=JSON.parse(localStorage.getItem('ih'))||{user:'stefanie',tab:'dashboard',member:'krisz',tasks:[],stats:{},comp:{},status:{},total:0};
+TEAM.forEach(m=>{if(!S.stats[m.id])S.stats[m.id]={pts:0,done:0,helps:0,badges:[]};if(!S.comp[m.id])S.comp[m.id]={str:[],weak:[]};if(!S.status[m.id])S.status[m.id]='online'});
+const save=()=>localStorage.setItem('ih',JSON.stringify(S));
+
+let audioCtx;
+const sound=t=>{try{if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);if(t==='done'){o.frequency.setValueAtTime(880,audioCtx.currentTime);o.frequency.exponentialRampToValueAtTime(1760,audioCtx.currentTime+0.1);g.gain.setValueAtTime(0.3,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.3);o.start();o.stop(audioCtx.currentTime+0.3)}else if(t==='level'){o.frequency.setValueAtTime(523,audioCtx.currentTime);o.frequency.setValueAtTime(659,audioCtx.currentTime+0.1);o.frequency.setValueAtTime(784,audioCtx.currentTime+0.2);o.frequency.setValueAtTime(1047,audioCtx.currentTime+0.3);g.gain.setValueAtTime(0.3,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.5);o.start();o.stop(audioCtx.currentTime+0.5)}else{o.frequency.setValueAtTime(600,audioCtx.currentTime);g.gain.setValueAtTime(0.2,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.2);o.start();o.stop(audioCtx.currentTime+0.2)}}catch(e){}};
+
+const particles=()=>{const c=document.getElementById('particles');for(let i=0;i<30;i++){const p=document.createElement('div');p.className='particle';p.style.left=Math.random()*100+'%';p.style.animationDelay=Math.random()*20+'s';p.style.animationDuration=(15+Math.random()*10)+'s';c.appendChild(p)}};
+
+let conf=[];
+const confetti=()=>{const cv=document.getElementById('confetti'),ctx=cv.getContext('2d');cv.width=innerWidth;cv.height=innerHeight;conf=[];for(let i=0;i<150;i++)conf.push({x:Math.random()*cv.width,y:Math.random()*cv.height-cv.height,r:Math.random()*6+4,d:Math.random()*150+50,color:['#8B5CF6','#06B6D4','#FFD700','#22c55e','#f97316'][Math.floor(Math.random()*5)],tilt:Math.random()*10-5,tiltAngle:0,tiltInc:Math.random()*0.07+0.05});let f=0;const draw=()=>{ctx.clearRect(0,0,cv.width,cv.height);conf.forEach(c=>{ctx.beginPath();ctx.lineWidth=c.r/2;ctx.strokeStyle=c.color;ctx.moveTo(c.x+c.tilt+c.r/4,c.y);ctx.lineTo(c.x+c.tilt,c.y+c.tilt+c.r/4);ctx.stroke();c.tiltAngle+=c.tiltInc;c.y+=(Math.cos(c.d)+3+c.r/2)/2;c.x+=Math.sin(f/50);c.tilt=Math.sin(c.tiltAngle)*15});f++;if(f<300)requestAnimationFrame(draw);else ctx.clearRect(0,0,cv.width,cv.height)};draw()};
+
+const toast=(title,msg,type='info')=>{const c=document.getElementById('toasts'),t=document.createElement('div');t.className='toast '+type;t.innerHTML=`<span style="font-size:1.5rem">${type==='success'?'✅':type==='warning'?'⚠️':'ℹ️'}</span><div><div style="font-weight:600">${title}</div><div style="font-size:0.85rem;color:var(--text-muted)">${msg}</div></div><button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.25rem">×</button>`;c.appendChild(t);sound('notif');setTimeout(()=>t.remove(),5000)};
+
+const showCeleb=(badge,title,sub)=>{document.getElementById('celebText').textContent=badge+' '+title;document.getElementById('celebSub').textContent=sub;document.getElementById('celeb').classList.add('show');confetti();sound('level')};
+const hideCeleb=()=>document.getElementById('celeb').classList.remove('show');
+const closeModal=id=>document.getElementById(id).classList.remove('show');
+const copyEmail=()=>{navigator.clipboard.writeText(document.getElementById('emailContent').textContent);toast('Siker','Email másolva!','success')};
+
+const countdown=d=>{const diff=new Date(d)-new Date();if(diff<0){const h=Math.abs(Math.floor(diff/3600000));return{text:`LEJÁRT! -${h}h`,cls:'danger'}}const days=Math.floor(diff/86400000),hrs=Math.floor((diff%86400000)/3600000),mins=Math.floor((diff%3600000)/60000);if(days>7)return{text:`${days} nap`,cls:'safe'};if(days>=1)return{text:`${days}n ${hrs}h`,cls:'safe'};if(hrs>=4)return{text:`${hrs}h ${mins}m`,cls:'warning'};return{text:`${hrs}h ${mins}m`,cls:'danger'}};
+
+const switchTab=t=>{S.tab=t;document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.t===t));document.querySelectorAll('.content').forEach(x=>x.classList.toggle('show',x.id==='c-'+t));document.getElementById('subNav').classList.toggle('show',t==='team');render();save()};
+
+const selectMember=id=>{S.member=id;renderSubNav();renderTeam();save()};
+
+const switchUser=id=>{S.user=id;const m=TEAM.find(x=>x.id===id);document.getElementById('userAvatar').textContent=m.name[0];document.getElementById('userAvatar').className='avatar'+(m.admin?' admin':'');document.getElementById('userName').innerHTML=m.name+(m.admin?' 👑':'');document.getElementById('userRole').textContent=m.role;document.getElementById('dropdown').classList.remove('show');render();save()};
+
+const render=()=>{updateProg();if(S.tab==='dashboard')renderDash();if(S.tab==='pool')renderPool();if(S.tab==='help')renderHelp();if(S.tab==='team')renderTeam();if(S.tab==='stats')renderStats();if(S.tab==='settings')renderSettings()};
+
+const updateProg=()=>{const t=S.total,target=t<500?500:1000,pct=Math.min((t/target)*100,100);document.getElementById('progFill').style.width=pct+'%';document.getElementById('progText').textContent=`${t}/${target}`};
+
+const renderDropdown=()=>{document.getElementById('dropdown').innerHTML=TEAM.map(m=>`<div class="dropdown-item" onclick="switchUser('${m.id}')"><div class="avatar${m.admin?' admin':''}" style="width:32px;height:32px;font-size:0.8rem">${m.name[0]}</div><div><div style="font-weight:600">${m.name}${m.admin?' 👑':''}</div><div style="font-size:0.75rem;color:var(--text-muted)">${m.role}</div></div></div>`).join('')};
+
+const renderSubNav=()=>{document.getElementById('subNav').innerHTML=TEAM.map(m=>`<button class="sub-tab${S.member===m.id?' active':''}" onclick="selectMember('${m.id}')"><div style="width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:0.7rem">${m.name[0]}</div>${m.name}</button>`).join('')};
+
+const empty=(icon,text)=>`<div class="empty"><div class="empty-icon">${icon}</div><div>${text}</div></div>`;
+
+const miniCard=t=>{const m=TEAM.find(x=>x.id===t.assignee),name=t.assignee==='pool'?'Pool':m?.name||'?',cd=countdown(t.deadline);return`<div class="task ${t.priority}" style="padding:1rem;margin-bottom:0.5rem"><div class="task-meta"><span class="badge ${t.priority}">${PRIO[t.priority].name}</span><span class="countdown ${cd.cls}">${cd.text}</span></div><div class="task-title" style="margin-top:0.5rem;font-size:0.95rem">${t.title}</div><div class="task-assignee" style="margin-bottom:0"><div class="task-avatar">${name[0]}</div>${name}</div></div>`};
+
+const renderDash=()=>{const u=S.user,st=S.stats[u],my=S.tasks.filter(t=>t.assignee===u&&t.status!=='deleted'),active=my.filter(t=>t.status!=='done').length,helpCnt=S.tasks.filter(t=>t.needsHelp&&t.status!=='done').length;
+document.getElementById('dStats').innerHTML=`<div class="stat"><div class="stat-val">${st.pts}</div><div class="stat-label">Pontjaim</div></div><div class="stat"><div class="stat-val">${active}</div><div class="stat-label">Aktív</div></div><div class="stat"><div class="stat-val">${st.done}</div><div class="stat-label">Kész</div></div><div class="stat"><div class="stat-val">${helpCnt}</div><div class="stat-label">Segítség</div></div>`;
+const urgent=S.tasks.filter(t=>['critical','important'].includes(t.priority)&&t.status!=='done'&&t.status!=='deleted').slice(0,3);
+document.getElementById('dUrgent').innerHTML=urgent.length?urgent.map(miniCard).join(''):empty('✅','Nincs sürgős feladat');
+const helps=S.tasks.filter(t=>t.needsHelp&&t.status!=='done').slice(0,2);
+document.getElementById('dHelp').innerHTML=helps.length?helps.map(miniCard).join(''):empty('🤝','Nincs segítségkérés');
+const pool=S.tasks.filter(t=>t.assignee==='pool'&&t.status!=='done'&&t.status!=='deleted').slice(0,3);
+document.getElementById('dPool').innerHTML=pool.length?pool.map(miniCard).join(''):empty('⬡','Üres a pool');
+const sorted=Object.entries(S.stats).sort((a,b)=>b[1].pts-a[1].pts).slice(0,3),medals=['🥇','🥈','🥉'];
+document.getElementById('dTop').innerHTML=sorted.map(([id,s],i)=>{const m=TEAM.find(x=>x.id===id);return`<div class="lb-item ${['first','second','third'][i]}"><div class="lb-rank">${medals[i]}</div><div class="lb-avatar">${m.name[0]}</div><div class="lb-info"><div class="lb-name">${m.name}</div></div><div class="lb-points">${s.pts}</div></div>`}).join('')};
+
+const taskCard=(t,isPool=false)=>{const m=TEAM.find(x=>x.id===t.assignee),name=t.assignee==='pool'?'Pool':m?.name||'?',cd=countdown(t.deadline),cp=COMP.find(c=>c.id===t.comp),isAdmin=TEAM.find(x=>x.id===S.user)?.admin,isDone=t.status==='done';
+let stickers='';if(t.solving)stickers+=`<span class="sticker solving">✅ MEGOLDOM</span>`;if(t.needsHelp)stickers+=`<span class="sticker help">🆘 SEGÍTSÉG KELL</span>`;
+return`<div class="task ${t.priority}${isDone?' done':''}" data-id="${t.id}"><div class="task-meta"><span class="badge ${t.priority}">${PRIO[t.priority].name}</span>${cp?`<span class="badge comp">${cp.icon} ${cp.name}</span>`:''}<span class="badge status">${t.status==='new'?'🟣 ÚJ':t.status==='in-progress'?'🔵 FOLYAMATBAN':'🟢 KÉSZ'}</span></div><div class="task-title">${t.title}</div><div class="task-assignee"><div class="task-avatar">${name[0]}</div>${name}</div><div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap"><span>⏰</span><span style="color:var(--text-muted)">${new Date(t.deadline).toLocaleDateString('hu-HU')}</span><span class="countdown ${cd.cls}">${cd.text}</span></div>${stickers?`<div class="stickers">${stickers}</div>`:''}${!isDone?`<div style="display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap"><button class="sticker-btn solving${t.solving?' active':''}" onclick="toggleSolving('${t.id}')">✅ Megoldom</button><button class="sticker-btn help${t.needsHelp?' active':''}" onclick="toggleHelp('${t.id}')">🆘 Segítség</button></div>`:''}<div class="actions">${isPool?`<button class="btn take" onclick="takeTask('${t.id}')">🎯 ELVISZEM</button>`:''}${!isDone?`<button class="btn complete" onclick="completeTask('${t.id}',event)">✓ Kész</button>`:''}${isAdmin?`<button class="btn" onclick="editTask('${t.id}')">✏️</button><button class="btn delete" onclick="deleteTask('${t.id}')">🗑️</button>`:''}<button class="btn" onclick="showEmail('${t.id}')">📧</button></div></div>`};
+
+const toggleSolving=id=>{const t=S.tasks.find(x=>x.id===id);if(t){t.solving=!t.solving;if(t.solving)t.status='in-progress';save();render()}};
+const toggleHelp=id=>{const t=S.tasks.find(x=>x.id===id);if(t){t.needsHelp=!t.needsHelp;if(t.needsHelp){toast('Segítségkérés','Értesítés küldve!','warning');t.helpers=t.helpers||[]}save();render()}};
+
+const takeTask=id=>{const t=S.tasks.find(x=>x.id===id);if(t){t.assignee=S.user;t.status='in-progress';t.solving=true;t.fromPool=true;toast('Feladat elvéve','+20% bónusz pont jár!','success');save();render()}};
+
+const helpTask=id=>{const t=S.tasks.find(x=>x.id===id);if(t&&S.user!==t.assignee){t.helpers=t.helpers||[];if(!t.helpers.includes(S.user)){t.helpers.push(S.user);S.stats[S.user].helps++;S.stats[S.user].pts+=40;toast('Segítség','+40 pont!','success');sound('done');checkAch(S.user);save();render()}}};
+
+const completeTask=(id,e)=>{const t=S.tasks.find(x=>x.id===id);if(t&&t.status!=='done'){t.status='done';t.completedAt=new Date().toISOString();let pts=PRIO[t.priority].pts;const diff=(new Date(t.deadline)-new Date())/3600000;if(diff>24)pts*=2;else if(diff>0)pts*=1.5;else if(diff>-24)pts*=0.5;else pts*=0.25;if(t.fromPool)pts*=1.2;pts=Math.round(pts);S.stats[t.assignee].pts+=pts;S.stats[t.assignee].done++;S.total++;if(e){const p=document.createElement('div');p.style.cssText=`position:fixed;left:${e.clientX}px;top:${e.clientY}px;font-family:Orbitron;font-size:1.5rem;font-weight:700;color:var(--cyan);text-shadow:0 0 20px var(--cyan);pointer-events:none;z-index:3000;animation:pointsFloat 2s forwards`;p.textContent=`+${pts}`;document.body.appendChild(p);setTimeout(()=>p.remove(),2000)}sound('done');toast('Feladat kész!',`+${pts} pont!`,'success');checkAch(t.assignee);checkTeamMilestone();save();render()}};
+
+const deleteTask=id=>{const t=S.tasks.find(x=>x.id===id);if(t){t.status='deleted';toast('Törölve','Feladat archiválva','info');save();render()}};
+
+const editTask=id=>{const t=S.tasks.find(x=>x.id===id);if(!t)return;document.getElementById('editContent').innerHTML=`<div class="field"><div class="field-label">Feladat</div><input id="editTitle" value="${t.title}"></div><div class="row"><div class="field"><div class="field-label">Felelős</div><select id="editAssignee"><option value="pool"${t.assignee==='pool'?' selected':''}>Pool</option>${TEAM.map(m=>`<option value="${m.id}"${t.assignee===m.id?' selected':''}>${m.name}</option>`).join('')}</select></div><div class="field"><div class="field-label">Prioritás</div><select id="editPrio">${Object.entries(PRIO).map(([k,v])=>`<option value="${k}"${t.priority===k?' selected':''}>${v.name}</option>`).join('')}</select></div><div class="field"><div class="field-label">Kompetencia</div><select id="editComp"><option value="">-</option>${COMP.map(c=>`<option value="${c.id}"${t.comp===c.id?' selected':''}>${c.icon} ${c.name}</option>`).join('')}</select></div></div><div class="field"><div class="field-label">Határidő</div><input type="datetime-local" id="editDeadline" value="${t.deadline.slice(0,16)}"></div><button class="approve" onclick="saveEdit('${t.id}')">💾 MENTÉS</button>`;document.getElementById('editModal').classList.add('show')};
+
+const saveEdit=id=>{const t=S.tasks.find(x=>x.id===id);if(t){t.title=document.getElementById('editTitle').value;t.assignee=document.getElementById('editAssignee').value;t.priority=document.getElementById('editPrio').value;t.comp=document.getElementById('editComp').value;t.deadline=document.getElementById('editDeadline').value;toast('Mentve','Feladat frissítve','success');closeModal('editModal');save();render()}};
+
+const showEmail=id=>{const t=S.tasks.find(x=>x.id===id);if(!t)return;const m=TEAM.find(x=>x.id===t.assignee),name=t.assignee==='pool'?'Csapat':m?.name||'Kolléga';document.getElementById('emailContent').textContent=`Tárgy: [InnovationHub] Új feladat: ${t.title}\n\nSzia ${name}!\n\nÚj feladatod érkezett:\n\n📌 Feladat: ${t.title}\n⏰ Határidő: ${new Date(t.deadline).toLocaleDateString('hu-HU')}\n🔥 Prioritás: ${PRIO[t.priority].name}\n\nÜdv,\nInnovationHub TaskManager`;document.getElementById('emailModal').classList.add('show')};
+
+const checkAch=uid=>{const st=S.stats[uid];ACH.forEach(a=>{if(st.pts>=a.pts&&!st.badges.includes(a.badge)){st.badges.push(a.badge);if(a.big)showCeleb(a.badge,a.title,a.msg);else{toast(`${a.badge} ${a.title}`,a.msg,'success');sound('level')}}});save()};
+
+const checkTeamMilestone=()=>{if(S.total===500||S.total===1000){showCeleb('🎉',`${S.total} FELADAT!`,`A csapat elérte! +${S.total===500?5:10}% bónusz mindenkinek!`);const bonus=S.total===500?0.05:0.1;Object.keys(S.stats).forEach(id=>{S.stats[id].pts=Math.round(S.stats[id].pts*(1+bonus))});save()}};
+
+const renderPool=()=>{let tasks=S.tasks.filter(t=>t.assignee==='pool'&&t.status!=='deleted'&&t.status!=='done');const activeFilter=document.querySelector('.filter.active')?.dataset.f||'all';if(activeFilter!=='all')tasks=tasks.filter(t=>t.priority===activeFilter);document.getElementById('poolTasks').innerHTML=tasks.length?tasks.map(t=>taskCard(t,true)).join(''):empty('⬡','Üres a pool')};
+
+const renderHelp=()=>{const helps=S.tasks.filter(t=>t.needsHelp&&t.status!=='done'&&t.status!=='deleted');document.getElementById('helpReqs').innerHTML=helps.length?helps.map(t=>{const m=TEAM.find(x=>x.id===t.assignee);const helpers=(t.helpers||[]).map(h=>TEAM.find(x=>x.id===h)?.name).filter(Boolean).join(', ');return`<div style="background:linear-gradient(135deg,rgba(249,115,22,0.1),rgba(239,68,68,0.05));border:1px solid var(--important);border-radius:16px;padding:1.25rem;margin-bottom:1rem"><div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem"><div><div class="task-assignee" style="margin-bottom:0.5rem"><div class="task-avatar">${m?.name[0]||'?'}</div>${m?.name||'?'} kér segítséget</div><div class="task-title">${t.title}</div></div><button class="btn take" onclick="helpTask('${t.id}')">🤝 SEGÍTEK</button></div>${helpers?`<div style="margin-top:1rem;font-size:0.85rem;color:var(--text-muted)">Segítők: ${helpers}</div>`:''}</div>`}).join(''):empty('🤝','Nincs aktív segítségkérés');
+const sorted=Object.entries(S.stats).filter(([,s])=>s.helps>0).sort((a,b)=>b[1].helps-a[1].helps);const medals=['🥇','🥈','🥉'];document.getElementById('helpLb').innerHTML=sorted.length?sorted.map(([id,s],i)=>{const m=TEAM.find(x=>x.id===id);return`<li class="lb-item${i<3?' '+['first','second','third'][i]:''}"><div class="lb-rank">${i<3?medals[i]:i+1}</div><div class="lb-avatar">${m.name[0]}</div><div class="lb-info"><div class="lb-name">${m.name}</div><div class="lb-tasks">${s.helps} segítség</div></div><div class="lb-points">+${s.helps*40}</div></li>`}).join(''):'<div style="color:var(--text-muted);text-align:center;padding:2rem">Még senki nem segített</div>'};
+
+const renderTeam=()=>{const id=S.member,m=TEAM.find(x=>x.id===id),st=S.stats[id],status=S.status[id],tasks=S.tasks.filter(t=>t.assignee===id),active=tasks.filter(t=>t.status!=='done'&&t.status!=='deleted'),done=tasks.filter(t=>t.status==='done'),badges=st.badges.map(b=>`<span style="font-size:1.5rem">${b}</span>`).join('');
+document.getElementById('teamContent').innerHTML=`<div class="profile"><div class="profile-avatar${m.admin?' admin':''}">${m.name[0]}</div><div class="profile-info"><div class="profile-name">${m.name}${m.admin?' 👑':''}</div><div class="profile-role">${m.role}</div><div class="profile-status"><div class="status-dot ${status}"></div>${status.toUpperCase()}</div>${badges?`<div style="margin-top:0.5rem">${badges}</div>`:''}</div><div class="profile-stats"><div class="profile-stat"><div class="profile-stat-val">${st.pts}</div><div class="profile-stat-label">Pont</div></div><div class="profile-stat"><div class="profile-stat-val">${st.done}</div><div class="profile-stat-label">Kész</div></div><div class="profile-stat"><div class="profile-stat-val">${st.helps}</div><div class="profile-stat-label">Segítés</div></div></div></div><h3 class="section-title"><div class="section-icon">📋</div>Aktív feladatok (${active.length})</h3>${active.length?active.map(t=>taskCard(t)).join(''):empty('✅','Nincs aktív feladat')}<h3 class="section-title" style="margin-top:2rem"><div class="section-icon">✓</div>Befejezett (${done.length})</h3>${done.slice(0,5).map(t=>taskCard(t)).join('')||'<div style="color:var(--text-muted)">Még nincs befejezett</div>'}`};
+
+const renderStats=()=>{const sorted=Object.entries(S.stats).sort((a,b)=>b[1].pts-a[1].pts),medals=['🥇','🥈','🥉'];
+document.getElementById('mainLb').innerHTML=sorted.map(([id,s],i)=>{const m=TEAM.find(x=>x.id===id),badges=s.badges.map(b=>`<span style="font-size:1rem">${b}</span>`).join('');return`<li class="lb-item${i<3?' '+['first','second','third'][i]:''}"><div class="lb-rank">${i<3?medals[i]:i+1}</div><div class="lb-avatar">${m.name[0]}</div><div class="lb-info"><div class="lb-name">${m.name} ${badges}</div><div class="lb-tasks">${s.done} feladat</div></div><div class="lb-points">${s.pts}</div></li>`}).join('');
+const totalPts=Object.values(S.stats).reduce((a,b)=>a+b.pts,0),totalDone=Object.values(S.stats).reduce((a,b)=>a+b.done,0),totalHelps=Object.values(S.stats).reduce((a,b)=>a+b.helps,0);
+document.getElementById('teamStats').innerHTML=`<div class="stats" style="margin-bottom:0"><div class="stat"><div class="stat-val">${totalPts}</div><div class="stat-label">Össz pont</div></div><div class="stat"><div class="stat-val">${totalDone}</div><div class="stat-label">Elvégezve</div></div><div class="stat"><div class="stat-val">${totalHelps}</div><div class="stat-label">Segítések</div></div><div class="stat"><div class="stat-val">${S.tasks.length}</div><div class="stat-label">Össz feladat</div></div></div>`};
+
+const renderSettings=()=>{const isAdmin=TEAM.find(x=>x.id===S.user)?.admin;
+document.getElementById('setMember').innerHTML=TEAM.map(m=>`<option value="${m.id}"${S.member===m.id?' selected':''}>${m.name}</option>`).join('');
+document.getElementById('setMember').onchange=e=>{S.member=e.target.value;renderComp();save()};
+renderComp();
+document.getElementById('adminSet').innerHTML=isAdmin?`<h3 class="settings-title" style="margin-top:2rem">👑 Admin</h3><div style="display:flex;gap:1rem;flex-wrap:wrap"><button class="btn" onclick="resetMonthly()">🔄 Havi nullázás</button><button class="btn" onclick="exportData()">📥 Export</button><button class="btn delete" onclick="clearAll()">🗑️ Minden törlése</button></div>`:''};
+
+const renderComp=()=>{const id=S.member,c=S.comp[id];
+document.getElementById('strGrid').innerHTML=COMP.map(x=>`<div class="comp-item${c.str.includes(x.id)?' strength':''}" onclick="toggleStr('${id}','${x.id}')"><div class="comp-check">${c.str.includes(x.id)?'✓':''}</div><span>${x.icon} ${x.name}</span></div>`).join('');
+document.getElementById('weakGrid').innerHTML=COMP.map(x=>`<div class="comp-item${c.weak.includes(x.id)?' weakness':''}" onclick="toggleWeak('${id}','${x.id}')"><div class="comp-check">${c.weak.includes(x.id)?'✓':''}</div><span>${x.icon} ${x.name}</span></div>`).join('')};
+
+const toggleStr=(mid,cid)=>{const arr=S.comp[mid].str,idx=arr.indexOf(cid);if(idx>-1)arr.splice(idx,1);else arr.push(cid);const wIdx=S.comp[mid].weak.indexOf(cid);if(wIdx>-1)S.comp[mid].weak.splice(wIdx,1);save();renderComp()};
+const toggleWeak=(mid,cid)=>{const arr=S.comp[mid].weak,idx=arr.indexOf(cid);if(idx>-1)arr.splice(idx,1);else arr.push(cid);const sIdx=S.comp[mid].str.indexOf(cid);if(sIdx>-1)S.comp[mid].str.splice(sIdx,1);save();renderComp()};
+
+const resetMonthly=()=>{if(confirm('Havi nullázás?')){Object.keys(S.stats).forEach(id=>{S.stats[id]={pts:0,done:0,helps:0,badges:[]}});S.total=0;toast('Nullázva','Statisztikák visszaállítva','success');save();render()}};
+const exportData=()=>{const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`innovationhub_${new Date().toISOString().slice(0,10)}.json`;a.click();toast('Exportálva','Adatok letöltve','success')};
+const clearAll=()=>{if(confirm('MINDEN adat törlése?')){localStorage.removeItem('ih');location.reload()}};
+
+// AI Parser
+const processAI=()=>{const input=document.getElementById('aiIn').value.trim();if(!input){toast('Hiba','Írj be feladatokat!','warning');return}const tasks=parseNL(input);if(!tasks.length){toast('Nincs találat','Nem találtam feladatokat','warning');return}renderParsed(tasks)};
+
+const parseNL=text=>{const tasks=[],sentences=text.split(/[.!?]+/).filter(s=>s.trim().length>5);
+const names={stefanie:'stefanie',stefi:'stefanie',krisz:'krisz',patrik:'patrik',matyi:'matyi',máté:'matyi',bence:'bence',judit:'judit',norbi:'norbi',norbert:'norbi',balázs:'balazs',balazs:'balazs'};
+const prios={asap:'critical',sürgős:'critical',kritikus:'critical',azonnal:'critical',fontos:'important',hamar:'important',közepes:'medium',alacsony:'low',ráér:'idle',majd:'idle'};
+const comps={ppt:'ppt',prezentáció:'ppt',powerpoint:'ppt',word:'word',dokumentum:'word',excel:'excel',táblázat:'excel',adat:'excel',kutat:'research',research:'research',versenytárs:'research',design:'design',dizájn:'design',kommunikáció:'communication',ügyfél:'communication',projekt:'pm',tech:'tech',marketing:'marketing',pénz:'finance',jog:'legal',szerződés:'legal',tárgyal:'negotiation',szervez:'organizing',ír:'writing',szöveg:'writing',angol:'language',fordít:'language'};
+const deadlines={ma:0,holnap:1,holnapután:2,péntek:()=>{const d=new Date().getDay();let diff=5-d;if(diff<=0)diff+=7;return diff},'jövő hét':7,'két hét':14,'1 nap':1,'2 nap':2,'3 nap':3};
+
+sentences.forEach(sent=>{const s=sent.toLowerCase();
+let assignee='pool';for(const[p,id] of Object.entries(names)){if(s.includes(p)){assignee=id;break}}if(s.includes('valaki')||s.includes('bárki'))assignee='pool';
+let priority='medium';for(const[p,pr] of Object.entries(prios)){if(s.includes(p)){priority=pr;break}}
+let comp='';for(const[p,c] of Object.entries(comps)){if(s.includes(p)){comp=c;break}}
+let days=7;for(const[p,d] of Object.entries(deadlines)){if(s.includes(p)){days=typeof d==='function'?d():d;break}}
+const deadline=new Date();deadline.setDate(deadline.getDate()+days);deadline.setHours(17,0,0,0);
+tasks.push({id:'task_'+Date.now()+'_'+Math.random().toString(36).substr(2,5),title:sent.trim(),assignee,priority,comp,deadline:deadline.toISOString(),status:'new',solving:false,needsHelp:false,helpers:[],fromPool:false})});
+return tasks};
+
+const renderParsed=tasks=>{document.getElementById('parsed').innerHTML=`<h3 class="section-title"><div class="section-icon">🤖</div>Felismert feladatok (${tasks.length})</h3>${tasks.map((t,i)=>`<div class="parsed"><div class="field"><div class="field-label">Feladat</div><input id="pt_${i}" value="${t.title}"></div><div class="row"><div class="field"><div class="field-label">Felelős</div><select id="pa_${i}"><option value="pool"${t.assignee==='pool'?' selected':''}>Pool</option>${TEAM.map(m=>`<option value="${m.id}"${t.assignee===m.id?' selected':''}>${m.name}</option>`).join('')}</select></div><div class="field"><div class="field-label">Prioritás</div><select id="pp_${i}">${Object.entries(PRIO).map(([k,v])=>`<option value="${k}"${t.priority===k?' selected':''}>${v.name}</option>`).join('')}</select></div><div class="field"><div class="field-label">Kompetencia</div><select id="pc_${i}"><option value="">-</option>${COMP.map(c=>`<option value="${c.id}"${t.comp===c.id?' selected':''}>${c.icon} ${c.name}</option>`).join('')}</select></div></div><div class="field"><div class="field-label">Határidő</div><input type="datetime-local" id="pd_${i}" value="${t.deadline.slice(0,16)}"></div></div>`).join('')}<button class="approve" onclick="approveTasks(${tasks.length})">✅ JÓVÁHAGYÁS ÉS KIKÜLDÉS</button>`;window.parsedCount=tasks.length};
+
+const approveTasks=count=>{for(let i=0;i<count;i++){S.tasks.push({id:'task_'+Date.now()+'_'+i,title:document.getElementById(`pt_${i}`).value,assignee:document.getElementById(`pa_${i}`).value,priority:document.getElementById(`pp_${i}`).value,comp:document.getElementById(`pc_${i}`).value,deadline:document.getElementById(`pd_${i}`).value,status:'new',solving:false,needsHelp:false,helpers:[],fromPool:false,createdAt:new Date().toISOString()})}document.getElementById('aiIn').value='';document.getElementById('parsed').innerHTML='';sound('done');toast('Létrehozva',`${count} feladat hozzáadva!`,'success');save();render()};
+
+// Init
+document.addEventListener('DOMContentLoaded',()=>{particles();renderDropdown();renderSubNav();
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.t)));
+document.getElementById('userBtn').addEventListener('click',e=>{e.stopPropagation();document.getElementById('dropdown').classList.toggle('show')});
+document.addEventListener('click',()=>document.getElementById('dropdown').classList.remove('show'));
+document.getElementById('aiBtn').addEventListener('click',processAI);
+document.querySelectorAll('.filter').forEach(f=>f.addEventListener('click',()=>{document.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));f.classList.add('active');renderPool()}));
+render();setInterval(render,60000)});
+
+// Add CSS animation for points
+const style=document.createElement('style');style.textContent='@keyframes pointsFloat{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-100px) scale(1.5)}}';document.head.appendChild(style);
+</script>
+</body>
+</html>
